@@ -1,20 +1,20 @@
-function Rates = speedControl(varargin)
+function MouseNet = speedControl(varargin)
 
 %% Oscillation frequency, input dependent recruitment of populations
-
+    
     NP = NetworkParameters();
-    NP.AddCelltype('V2a-1','cau','','','','','',700,0.3850*0.7);
-    NP.AddCelltype('V2a-2','bi','','','','','',500,0.3850*0.7);
-    NP.AddCelltype('V1','bi','','','','','',10000,0.1100*0.7);
+    NP.AddCelltype('V2a-1','cau','','','','','',1000,0.1000*5);
+    NP.AddCelltype('V2a-2','bi','','','','','',500,0.1000*2.5);
+    NP.AddCelltype('V1','bi','','','','','',2000,0.1000*2.5);
     MouseNet = Network(3000,0.5,NP);
     
     W = MouseNet.ConnMat;
 
     simTime = 30000;
-    lowerIe = 15;
-    upperIe = 35;
-    V2a_1Thr = 30;
-    V2a_2Thr = 25;
+    lowerIe = 20;
+    upperIe = 30;
+    V2a_1Thr = 25;
+    V2a_2Thr = 22.5;
     V1_Thr = 20;
 
         for ii = 1:2:length(varargin)
@@ -52,6 +52,6 @@ function Rates = speedControl(varargin)
 
     MouseNet.Simulate(simTime,'I_e', inputSignal, 'threshold', threshold);
 
-    Rates = MouseNet.Rates;
+    GeneratePlot(MouseNet);
 
 end

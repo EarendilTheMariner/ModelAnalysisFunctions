@@ -11,10 +11,10 @@ function MouseNet = speedControl(varargin)
     W = MouseNet.ConnMat;
 
     simTime = 34000;
-    lowerIe = 17;
-    upperIe = 21;
-    V2a_1Thr = 21;
-    V2a_2Thr = 20.5;
+    lowerIe = 20;
+    upperIe = 20;
+    V2a_1Thr = 20;
+    V2a_2Thr = 20;
     V1_Thr = 20;
     caudInp = false;
 
@@ -67,6 +67,7 @@ function MouseNet = speedControl(varargin)
 
 
     MouseNet.Simulate(simTime,'I_e', inputSignal, 'threshold', threshold);
-    MouseNet.PlotRates(inputSignal)
+    MouseNet.PlotRates('InputSignal', inputSignal);
+
 
 end

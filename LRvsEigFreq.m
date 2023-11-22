@@ -1,4 +1,4 @@
-function Summarys = networkGenerations(varargin)
+function Summarys = LRvsEigFreq(varargin)
 
 %% Simulates networks and computes summary statistics 
 
@@ -55,8 +55,9 @@ function Summarys = networkGenerations(varargin)
             clearvars -except Summarys excLoop inhLoop i ii LowerExcLS ExLSStep
        
             NetParams = NetworkParameters();
-            NetParams.AddCelltype('V2a-1','cau','','','','','',excLoop(i),0.3850);
-            NetParams.AddCelltype('V2b','bi','','','','','',inhLoop(ii),0.11);
+            NetParams.AddCelltype('V2a-1','cau','','','','','',excLoop(i),0.1*2.5);
+            NetParams.AddCelltype('V2a-2','bi','','','','','',500,0.1*2.5)
+            NetParams.AddCelltype('V1','bi','','','','','',inhLoop(ii),0.1*2.5);
             MouseNet = Network(3000,0.5,NetParams);
             
             MouseNet.Simulate(10000);

@@ -1,4 +1,4 @@
-function MouseNet = speedControl(varargin)
+function MouseNet = SpeedControl(varargin)
 
 %% Oscillation frequency, input dependent recruitment of populations
     

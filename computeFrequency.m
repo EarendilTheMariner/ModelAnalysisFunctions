@@ -1,4 +1,4 @@
-function [dominantFrequency, eigFreq, lengthRatio] = computeFrequency(network_obj)
+function [dominantFrequency, eigFreq, lengthRatio] = ComputeFrequency(network_obj)
 
     %% function to compute the oscillatory frequency of the principal rate trace from network simulation
 

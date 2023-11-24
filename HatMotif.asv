@@ -49,9 +49,9 @@ function Stats = HatMotif(varargin)
             clearvars -except Summarys excLoop inhLoop i ii LowerExcLS ExLSStep
        
             NetParams = NetworkParameters();
-            NetParams.AddCelltype('V2a-1','cau','','','','','',1500,0.1*2.5);
-            NetParams.AddCelltype('V2a-2','bi','','','','','',excLoop(i),0.1*2.5)
-            NetParams.AddCelltype('V1','bi','','','','','',inhLoop(ii),0.1*2.5);
+            NetParams.AddCelltype('V2a-1','cau','','','','','',100,0.1*2.5);
+            NetParams.AddCelltype('V2a-2','bi','','','','','',500,0.1*2.5)
+            NetParams.AddCelltype('V1','bi','','','','','',5000,0.1*2.5);
             MouseNet = Network(3000,0.5,NetParams);
             
             MouseNet.Simulate(10000);

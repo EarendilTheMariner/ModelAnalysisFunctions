@@ -1,7 +1,7 @@
-function Stats = R0ActivityGainSweeps(varargin)
+function Stats = R0InputSweep(varargin)
 
-    ActGainSweep = linspace(0.1,1.5,80);
-    Summarys = zeros(1,length(ActGainSweep));
+    InputSweep = linspace(0.1,40,80);
+    Summarys = zeros(1,length(InputSweep));
     Caudal = false;
     Bidi = false;
     
@@ -22,22 +22,26 @@ function Stats = R0ActivityGainSweeps(varargin)
 
     V2a_1Ix = MouseNet.Types == 'V2a-1';
     V1Ix = MouseNet.Types == 'V1';
+    BaseInput = ones(size(W,1),10000).*20;
+
          
-    for i = 1:length(ActGainSweep)
+    for i = 1:length(InputSweep)
         close all 
-        clearvars -except Summarys i ActGainSweep MouseNet W V2a_1Ix V1Ix Caudal Bidi
+        clearvars -except Summarys i InputSweep MouseNet W V2a_1Ix V1Ix Caudal Bidi BaseInput
         
         MouseNet.Rates = [];
-        BaseGain = ones(size(W,1),10000).*1;
 
         if Caudal
-            BaseGain(V2a_1Ix,:) = ActGainSweep(i);
-            MouseNet.Simulate(10000, 'gain', BaseGain);
+            BaseInput(V2a_1Ix,:) = InputSweep(i);
+            MouseNet.Simulate(10000, 'I_e', BaseInput);
+
         elseif Bidi 
-            BaseGain(V1Ix,:) = ActGainSweep(i);
-            MouseNet.Simulate(10000, 'gain', BaseGain);
+            BaseInput(V1Ix,:) = InputSweep(i);
+            MouseNet.Simulate(10000, 'I_e', BaseInput);
+
         else
-            MouseNet.Simulate(10000, 'gain', BaseGain);
+            BaseInput(:,:) = InputSweep(i);
+            MouseNet.Simulate(10000, 'I_e', BaseInput);
         end
 
         [~, scores] = pca(MouseNet.Rates);
@@ -61,10 +65,10 @@ function Stats = R0ActivityGainSweeps(varargin)
         box off
 
         subplot(2,2,1);
-        scatter(ActGainSweep(i),Summarys(1:i))
-        xlim([0,2]);
-        ylim([0,250]);
-        xlabel('Bidirectional Activation Gain (Iteration)');
+        scatter(InputSweep(i),Summarys(1:i))
+        xlim([0,40]);
+        ylim([0,500]);
+        xlabel('Bidirectional (V1) Input (Iteration)');
         ylabel('Amplitude (RMS)');
         grid();
         box off
@@ -86,7 +90,7 @@ function Stats = R0ActivityGainSweeps(varargin)
         im = imread('temp.png');
         [imind,cm] = rgb2ind(im,256);  % Convert the image to indexed color
 
-        filename = 'BidiActGainSweep.gif'
+        filename = 'BidiInputSweep.gif';
 
         % Write to GIF
         if i == 1
@@ -100,5 +104,6 @@ function Stats = R0ActivityGainSweeps(varargin)
     save('Stats',"Summarys");
 
 end
+
 
 

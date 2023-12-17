@@ -7,12 +7,14 @@ function Stats = R0SymPattern(varargin)
         switch varargin{ii}
             case 'SegmentLengthSweep'
                 SLSweep = varargin{ii+1};
-
         end
+
+    HeatMap = zeros(length(SLSweep),689);
+
     end
     for i = 1:length(SLSweep)
         close all
-        clearvars -except SLSweep i
+        clearvars -except SLSweep i HeatMap
 
         NetParams = NetworkParameters();
         NetParams.AddCelltype('V2a-1','bi','','','','','',1000,0.1*1.8);
@@ -21,7 +23,17 @@ function Stats = R0SymPattern(varargin)
         MouseNet.Simulate(8000);
         GeneratePlot(MouseNet);
 
+        SSRates = MouseNet.Rates(end,:);
+        [~,idx] = sort(MouseNet.Position(:,2));
+        SSRates = SSRates(idx);
+        
+        HeatMap(i,:) = SSRates;
+
         close all
+
+        uniqueFilename = ['MouseNet_',num2str(i), '.mat']; 
+
+        save(uniqueFilename, 'MouseNet');
     
         figure;
         subplot(2,2,3:4);
@@ -34,12 +46,14 @@ function Stats = R0SymPattern(varargin)
         box off
     
         subplot(2,2,1:2);
-        scatter(MouseNet.Position(:,2),MouseNet.Rates(end,:))
-        vline(SLSweep(i),'r','Segment boundary')
-        xlabel('Rostro-caudal coordinate');
+        bar(MouseNet.Position(:,2)/SLSweep(i),MouseNet.Rates(end,:),1,'histc');
+    %    vline(SLSweep(i),'r','Segment boundary')
+        xlabel('Norm. Rostro-caudal coordinate');
         ylabel('Activity (Firing rate)');
-        xlim([0,50000]);
-        legend('Steady-state');
+        xlim([0,1]);
+        ylim([0,55]);
+        legend('Segment Length =',num2str(round(SLSweep(i))));
+        title('Steady-state spatial activity')
         grid();
         box off
 
@@ -61,6 +75,7 @@ function Stats = R0SymPattern(varargin)
             imwrite(imind,cm,filename,'gif','WriteMode','append', 'DelayTime', 0.4);
         end
     end
+    save('Stats',"HeatMap");
 
     delete('temp.png');
 end

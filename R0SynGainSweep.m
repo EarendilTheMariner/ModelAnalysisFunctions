@@ -24,7 +24,7 @@ function Stats = R0SynGainSweep(varargin)
             NetParams = NetworkParameters();
             NetParams.AddCelltype('V2a-1','cau','','','','','',1000,0.1*SynGainSweep(i));
             NetParams.AddCelltype('V1','bi','','','','','',3300,0.1*1.8);
-            MouseNet = Network(3000,0.5,NetParams);   
+            MouseNet = Network(3300,0.5,NetParams);   
             MouseNet.Simulate(10000);
 
         elseif Bidi

@@ -1,33 +1,39 @@
-function Stats = R0SymPattern(varargin)
+function Stats = R0SpatialPattern(varargin)
 
     SLSweep = linspace(3000,50000,80);
+    LSSweep = linspace(10,0.05,50);
+    GainSweep = linspace(1,10,50);
 
 
      for ii = 1:2:length(varargin)
         switch varargin{ii}
             case 'SegmentLengthSweep'
                 SLSweep = varargin{ii+1};
+            case 'LengthScaleSweep'
+                LSSweep = varargin{ii+1};
+            case 'GainSweep'
+                GainSweep = varargin{ii+1};
         end
+     end
+        
+    Stats = zeros(length(SLSweep),689);
 
-    HeatMap = zeros(length(SLSweep),689);
-
-    end
     for i = 1:length(SLSweep)
         close all
-        clearvars -except SLSweep i HeatMap
+        clearvars -except SLSweep i Stats LSSweep GainSweep
 
         NetParams = NetworkParameters();
-        NetParams.AddCelltype('V2a-1','bi','','','','','',1000,0.1*1.8);
-        NetParams.AddCelltype('V1','bi','','','','','',3300,0.1*6);
-        MouseNet = Network(SLSweep(i),1,NetParams);
-        MouseNet.Simulate(8000);
+        NetParams.AddCelltype('V2a-1','cau','','','','','',1000,0.17);
+        NetParams.AddCelltype('V1','bi','','','','','',3300,0.17);
+        MouseNet = Network(3300,1,NetParams);
+        MouseNet.Simulate(10000);
         GeneratePlot(MouseNet);
 
         SSRates = MouseNet.Rates(end,:);
         [~,idx] = sort(MouseNet.Position(:,2));
         SSRates = SSRates(idx);
         
-        HeatMap(i,:) = SSRates;
+        Stats(i,:) = SSRates;
 
         close all
 
@@ -46,13 +52,13 @@ function Stats = R0SymPattern(varargin)
         box off
     
         subplot(2,2,1:2);
-        bar(MouseNet.Position(:,2)/SLSweep(i),MouseNet.Rates(end,:),1,'histc');
+        bar(MouseNet.Position(:,2)/3300,MouseNet.Rates(end,:),1,'histc');
     %    vline(SLSweep(i),'r','Segment boundary')
         xlabel('Norm. Rostro-caudal coordinate');
         ylabel('Activity (Firing rate)');
         xlim([0,1]);
         ylim([0,55]);
-        legend('Segment Length =',num2str(round(SLSweep(i))));
+        legend('Segment length =',num2str(round(SLSweep(i))));
         title('Steady-state spatial activity')
         grid();
         box off
@@ -65,9 +71,9 @@ function Stats = R0SymPattern(varargin)
         imwrite(im, 'temp.png');
         im = imread('temp.png');
         [imind,cm] = rgb2ind(im,256);  % Convert the image to indexed color
-
-        filename = 'R0SegmentLengthSweep.gif'
-
+        
+        filename = 'R0InputPatternSweep.gif';
+        
         % Write to GIF
         if i == 1
             imwrite(imind,cm,filename,'gif', 'Loopcount',inf, 'DelayTime', 0.4);
@@ -75,7 +81,7 @@ function Stats = R0SymPattern(varargin)
             imwrite(imind,cm,filename,'gif','WriteMode','append', 'DelayTime', 0.4);
         end
     end
-    save('Stats',"HeatMap");
+    save('Stats',"Stats");
 
     delete('temp.png');
 end

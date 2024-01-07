@@ -15,9 +15,9 @@ function Stats = R0InputSweep(varargin)
     end
 
     NetParams = NetworkParameters();
-    NetParams.AddCelltype('V2a-1','cau','','','','','',1000,0.1*1.8);
+    NetParams.AddCelltype('V2a-1','bi','','','','','',1000,0.1*1.8);
     NetParams.AddCelltype('V1','bi','','','','','',3300,0.1*1.8);
-    MouseNet = Network(3000,1,NetParams);
+    MouseNet = Network(3300,1,NetParams);
     W = MouseNet.ConnMat;
 
     V2a_1Ix = MouseNet.Types == 'V2a-1';

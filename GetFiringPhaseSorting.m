@@ -1,6 +1,11 @@
 function [SortingIndices,varargout] = GetFiringPhaseSorting(FiringMatrix,Ops,varargin)
+    
     Method = 'Correlation';
-    Source = sum(FiringMatrix,2);
+    %Vars = var(FiringMatrix);
+    %[~,I] = maxk(Vars,500);
+    %Source = sum(FiringMatrix(:,I),2);
+    [~, scores] = pca(FiringMatrix);
+    Source = scores(:,1);
     for ii = 1:2:length(varargin)
         switch(varargin{ii})
             case 'Source'

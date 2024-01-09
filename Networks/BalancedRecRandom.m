@@ -1,9 +1,10 @@
+
 function [W, Rates] = BalancedRecRandom(varargin)
     rng('shuffle');
     gain = 1;
     var = 0.1;
     Prob = 0.1;
-    n = 500;
+    n = 2000;
     f_exc = 0.5;
 
     % Parsing variable arguments 
@@ -45,7 +46,8 @@ function [W, Rates] = BalancedRecRandom(varargin)
     W = Connectivity;
 
     % Simulation
-    Rates = SimulateNetwork(W,10000);
+    Rates = SimulateNetwork(W,20000);
+    Rates = Rates(1001:end,:);
 
 
     % Eigenspectrum

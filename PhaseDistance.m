@@ -10,24 +10,39 @@ function Coords = PhaseDistance(W,varargin)
             end
         end
 
-        
+        % Extract representative signal with PCA
         Rates = SimulateNetwork(W,20000);
-        Rates = Rates(10000:end-1,:);                                           %Trim off transient initial dynamics
-        SmoothR = smoothdata(Rates);                                            %Smooth high frequency fluctuation
-        %[~,locs] = findpeaks(SmoothR(:,1));                                    %Peak times of arbitrary representative unit 
-        [~,scores] = pca(SmoothR);
+        Rates = Rates(10001:end-1,:);                                           
+        [~,scores] = pca(Rates);
         PCRef = scores(:,1);
+
+        % Zero padding to reduce boundary effects
+        PadLength = 10000;
+        StartPad = zeros(PadLength,1);
+        EndPad = StartPad;
+
+        % Mirror padding
+        StartPad = flipud(StartPad);
+        EndPad = flipud(EndPad);
+        
+        % Padded PCRef      
+        PCRef = [StartPad; PCRef; EndPad];
+
+        % Smooth padded signal and trim pads
+
+        PCRef = smoothdata(PCRef);
+        PCRef = PCRef(PadLength+1:end-PadLength);
+
+        %Identify peaks and compute variance
+
         [~,locs] = findpeaks(PCRef); 
         PCVar = var(PCRef);
 
         if PCVar > 1000 & length(locs) > 1
 
             Per = mean(diff(locs));
-           %MidPeaks = [locs(round(length(locs)/2)),locs(round(length(locs)/2)-1)]; %Central peak-times of rep. unit
             
-            
-           %PeriodRates = SmoothR(MidPeaks(2):MidPeaks(1),:);
-            PeriodRates = SmoothR(length(SmoothR(:,1))*0.5-0.5*Per:length(SmoothR(:,1))*0.5+0.5*Per,:);
+            PeriodRates = Rates(length(Rates(:,1))*0.5-0.5*Per:length(Rates(:,1))*0.5+0.5*Per,:);
     
             NPeaks = zeros(n,1);
     

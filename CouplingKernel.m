@@ -70,12 +70,12 @@ function CouplingKernel(W,f_exc,Coords,Rates)
     subplot(2,3,4:6)
     plot(Rates(1:end,:));
 
- %   set(gcf, 'WindowState', 'maximized');
+    set(gcf, 'WindowState', 'maximized');
 
- %   drawnow;  % Ensure the plot is fully rendered
- %   frame = getframe(gcf);  % Get the current frame
- %   im = frame2im(frame); % Convert the frame to an image
- %   imwrite(im, 'kernel.png');
+    drawnow;  % Ensure the plot is fully rendered
+    frame = getframe(gcf);  % Get the current frame
+    im = frame2im(frame); % Convert the frame to an image
+    imwrite(im, 'kernel_2.png');
 
 end
     

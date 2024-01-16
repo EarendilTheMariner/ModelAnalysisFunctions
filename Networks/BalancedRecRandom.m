@@ -4,7 +4,7 @@ function [W, Rates] = BalancedRecRandom(varargin)
     gain = 1;
     var = 0.1;
     Prob = 0.1;
-    n = 500;
+    n = 2000;
     f_exc = 0.5;
 
     % Parsing variable arguments 
@@ -92,12 +92,12 @@ function [W, Rates] = BalancedRecRandom(varargin)
     ylim([-400,400]);
     box off
 
-%    set(gcf, 'WindowState', 'maximized');
+    set(gcf, 'WindowState', 'maximized');
 
-%    drawnow;  % Ensure the plot is fully rendered
-%    frame = getframe(gcf);  % Get the current frame
-%    im = frame2im(frame); % Convert the frame to an image
-%    imwrite(im, 'dynamics.png');
+    drawnow;  % Ensure the plot is fully rendered
+    frame = getframe(gcf);  % Get the current frame
+    im = frame2im(frame); % Convert the frame to an image
+    imwrite(im, 'dynamics.png');
 
 end
   

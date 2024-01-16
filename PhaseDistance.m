@@ -1,4 +1,4 @@
-function Coords = PhaseDistance(W,varargin)
+function Coords = PhaseDistance(W,Rates,varargin)
     
         n = length(W(:,1));
         f_exc = 0.5;
@@ -11,8 +11,10 @@ function Coords = PhaseDistance(W,varargin)
         end
 
         % Extract representative signal with PCA
-        Rates = SimulateNetwork(W,20000);
-        Rates = Rates(10001:end-1,:);                                           
+        
+ %      Rates = SimulateNetwork(W,20000);
+ %      Rates = Rates(10001:end,:);   
+ %      save('Rates.mat','Rates');
         [~,scores] = pca(Rates);
         PCRef = scores(:,1);
 
@@ -20,10 +22,6 @@ function Coords = PhaseDistance(W,varargin)
         PadLength = 10000;
         StartPad = zeros(PadLength,1);
         EndPad = StartPad;
-
-        % Mirror padding
-        StartPad = flipud(StartPad);
-        EndPad = flipud(EndPad);
         
         % Padded PCRef      
         PCRef = [StartPad; PCRef; EndPad];
@@ -63,16 +61,16 @@ function Coords = PhaseDistance(W,varargin)
     
             Coords = XCoords;
             
-            save('Coords.mat','Coords');
+            save('Coords_2.mat','Coords');
             
             CouplingKernel(W,f_exc,Coords,Rates);
             disp(var(PCRef))
-            save('PCVar','PCVar');
+            save('PCVar_2','PCVar');
 
         else
             disp(var(PCRef));
             disp('No oscillations');
-            save('PCVar','PCVar');
+            save('PCVar_2','PCVar');
         end
         
 end

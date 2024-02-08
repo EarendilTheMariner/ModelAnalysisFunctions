@@ -26,6 +26,7 @@ function R = SimulateNetwork(W,t_steps,varargin)
             case 'seed'
                 seed = varargin{ii+1};
             case 'I_e'
+                
                 I_e = varargin{ii+1};
             case 'V_init'
                 V_init = varargin{ii+1};

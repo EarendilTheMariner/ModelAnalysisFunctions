@@ -1,4 +1,4 @@
-function [SymW,BinSums] = SymmetricGains(W,Coords)
+function [SymW,SymRates,SymDominantMode] = SymmetricGains(W,Coords)
 
     f_exc = 0.5;
     W = W;
@@ -8,7 +8,6 @@ function [SymW,BinSums] = SymmetricGains(W,Coords)
     Targets = W(:,:) ~= 0;
     ProjDist = Dist.*Targets;
 
-    BinSums = zeros(100,2);
 
     for ii = 1:100
         clearvars -except f_exc W L edges Dist Targets ProjDist ii Coords BinSums
@@ -116,16 +115,18 @@ function [SymW,BinSums] = SymmetricGains(W,Coords)
             
         end
 
-        BinSums(ii,:) = [sum(W(NegLinIx)) sum(W(PosLinIx))];
     end
 
     SymW = W;
     rad = range(real(eig(SymW)));
     SymW = SymW/(rad*0.5);
-%   SymW = BalanceConnectivity(SymW);
-    Rates = SimulateNetwork(SymW,20000);
-    Rates = Rates(10001:end,:);
-    CouplingKernel(SymW,f_exc,Coords,Rates);
+%    BalSymW = BalanceConnectivity(SymW);
+    SymRates = SimulateNetwork(SymW,20000);
+    SymRates = SymRates(10001:end,:);
+    CouplingKernel(SymW,f_exc,Coords,SymRates);
+    eigs = eig(SymW);
+    [~,eix] = max(real(eigs));
+    SymDominantMode = eigs(eix);
 
 end
 

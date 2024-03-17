@@ -13,8 +13,8 @@ function [W,Eigenvalues] = BalanceNormalize(W)
     
     Eigenvalues = eig(W);
 
-    ScaleFactor = 1/(real(DominantMode)*0.95);
-    save("GlobalScaling.mat","ScaleFactor");
+ %   ScaleFactor = 1/(real(DominantMode)*0.95);
+ %   save("GlobalScaling.mat","ScaleFactor");
     
 
 end

@@ -1,11 +1,11 @@
-function [W, Diff, Eigenvalues, DominantMode, Coords, I, E] = BalancedRecStructured(Size,MeanDiff)
+function [W, Diff, Eigenvalues, Coords, I, E] = BalancedRecStructured(Size,MeanDiff,Length)
 
     gain = 1;
     Var = 0.1;
 
     n = Size;
     W = zeros(n,n);
-    Coords = linspace(0,1000,n);
+    Coords = linspace(0,Length,n);
     Dist = bsxfun(@minus,Coords,Coords');
     L = range(Coords,2);
     edges = -L:10:L;
@@ -23,6 +23,12 @@ function [W, Diff, Eigenvalues, DominantMode, Coords, I, E] = BalancedRecStructu
     YI = discretize(DistI,edges);
 
     % Construct PDFs for populations
+
+    LengthDiff = (length(edges)-1)-length(MeanDiff);
+
+    Padding = zeros(LengthDiff/2,1);
+    MeanDiff = [Padding; MeanDiff; Padding];
+
 
     PosIx = MeanDiff > 0;
     NegIx = MeanDiff < 0;
@@ -60,28 +66,23 @@ function [W, Diff, Eigenvalues, DominantMode, Coords, I, E] = BalancedRecStructu
     W(:,logical(I)) = InhCons;
     W(:,logical(E)) = ExcCons;
 
-    W = BalanceConnectivity(W);
+    [W,Eigenvalues] = BalanceNormalize(W);
 
     Diff = SpatialCoupling(W,E,I,Coords);
-    Eigenvalues = eig(W);
+    
+   % Rates = SimulateNetwork(W,20000);
+   % Rates = Rates(10001:end,:);
 
-    [brevr,bixev] = sort(real(Eigenvalues),'descend');
-    bievr = imag(Eigenvalues(bixev));
+%    [brevr,bixev] = sort(real(Eigenvalues),'descend');
+%    bievr = imag(Eigenvalues(bixev));
 
-    [~,eix] = max(real(Eigenvalues));
-    DominantMode = Eigenvalues(eix);
+%    [~,eix] = max(real(Eigenvalues));
+%    DominantMode = Eigenvalues(eix);
 
-    fig = figure('Visible','off');
-    scatter(brevr,bievr);
-    vline(1);
-   % xlim([-1.5,1.5]);
-    axis equal
-    box off
-
-    set(gcf, 'WindowState', 'maximized');
-    drawnow;  % Ensure the plot is fully rendered
-    save2pdf(fig,['./'],['Spectrum_2'],'-dpdf');
-    close all
+%    set(gcf, 'WindowState', 'maximized');
+%    drawnow;  % Ensure the plot is fully rendered
+%    save2pdf(fig,['./'],['Spectrum_2'],'-dpdf');
+%    close all
 
 
 end

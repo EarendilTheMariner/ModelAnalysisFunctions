@@ -26,4 +26,29 @@ function Diff = SpatialCoupling(W,E,I,Coords)
 
     Diff = abs(MExZ.*CExZ)-abs(MInZ.*CInZ);
 
+%    fig = figure;
+%    set(gcf, 'WindowState', 'maximized');
+
+    difplus = Diff;
+    difneg = Diff;
+    difplus(difplus < 0) = 0;
+    difneg(difneg > 0) = 0;
+    difneg = abs(difneg);
+    col = [normalize(difneg,'range').*Colors().BergOrange+normalize(difplus,'range').*Colors().BergElectricBlue];
+    b = bar(edges(1:end-1),abs(MExZ.*CExZ)-abs(MInZ.*CInZ),'FaceColor','flat');
+    for k = 1:size(MExZ,1)
+        b.CData(k,:) = col(k,:);
+    end
+    set(gca, 'xtick', round(edges(1:100:end),0));
+    set(gca, 'xticklabels',round(edges(1:100:end),0));
+    legend({'Diff Excit Inihib'});
+    legend('FontSize',12);
+    ylabel('Net Synaptic Strength','FontSize',20);
+    
+    xlabel("Distance from Soma [um]",'FontSize',20);
+    box off
+
+ %   drawnow;  % Ensure the plot is fully rendered
+ %   save2pdf(fig,['./'],['N1000ProjectomeExample'],'-dpdf');
+
 end

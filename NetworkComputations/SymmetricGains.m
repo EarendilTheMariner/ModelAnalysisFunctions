@@ -118,15 +118,15 @@ function [SymW,SymRates,SymDominantMode] = SymmetricGains(W,Coords)
     end
 
     SymW = W;
-    rad = range(real(eig(SymW)));
+%    rad = range(real(eig(SymW)));
     SymW = SymW/(rad*0.5);
 %    BalSymW = BalanceConnectivity(SymW);
-    SymRates = SimulateNetwork(SymW,20000);
-    SymRates = SymRates(10001:end,:);
-    CouplingKernel(SymW,f_exc,Coords,SymRates);
-    eigs = eig(SymW);
-    [~,eix] = max(real(eigs));
-    SymDominantMode = eigs(eix);
+%    SymRates = SimulateNetwork(SymW,20000);
+%    SymRates = SymRates(10001:end,:);
+%    CouplingKernel(SymW,f_exc,Coords,SymRates);
+%    eigs = eig(SymW);
+%    [~,eix] = max(real(eigs));
+%    SymDominantMode = eigs(eix);
 
 end
 

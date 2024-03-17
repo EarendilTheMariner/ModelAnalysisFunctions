@@ -1,4 +1,13 @@
-function [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,BumpIx,G)
+function [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,BumpIx,G,varargin)
+
+    Balance = true;
+
+    for ii = 1:2:length(varargin)
+        switch varargin{ii}
+            case 'Balance'
+                Balance = varargin{ii+1};
+        end
+    end
 
     
     I = logical(I);
@@ -27,36 +36,66 @@ function [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,B
     
     CenterBump = (Dist(:,:) >= edges(50)) & (Dist(:,:) <= edges(150)) & (W(:,:) > 0);
 
+    Center1 = (Dist(:,:) >= edges(50)) & (Dist(:,:) <= edges(100)) & (W(:,:) > 0);
+    Center2 = (Dist(:,:) <= edges(150)) & (Dist(:,:) >= edges(101)) & (W(:,:) > 0);
+
     switch BumpIx
         case 1
             BIx = ExNegBump;
         case 2
             BIx = InhNegBump;
         case 3
-            BIx = CenterBump;
+            BIx = Center1;
         case 4
-            BIx = InhPosBump;
+            BIx = CenterBump;              
         case 5
+            BIx = Center2;
+        case 6
+            BIx = InhPosBump;
+        case 7
             BIx = ExPosBump;
         otherwise
-            error('Invalid BumpIndex. Please choose a value between 1 and 5.');
+            error('Invalid BumpIndex. Please choose a value between 1 and 7.');
     end
 
     % Outputs
-    
-    W(BIx) = G.*W(BIx);
+
+    B2 = sum(W(InhNegBump));
+    B4 = sum(W(InhPosBump));
+    S = B2 + B4;
+
+
+    if isequal(BIx, InhNegBump)
+
+        W(BIx) = G.*W(BIx);
+        
+        G2 = (S-G*B2)/B4;
+
+        W(InhPosBump) = G2*W(InhPosBump);
+
+    elseif isequal(BIx,InhPosBump)
+
+        W(BIx) = G.*W(BIx);
+
+        G2 = (S-G.*B4)/B2;
+
+        W(InhNegBump) = G2.*W(InhNegBump);
+
+    else
+        W(BIx) = G*W(BIx);
+    end
 
     WCtrl = W;
 
-%    WCtrl = BalanceConnectivity(WCtrl);
-
-    WCtrl = BalanceNormalize(WCtrl);
+    if Balance
+        WCtrl = BalanceConnectivity(WCtrl);
+    else
+        disp('Unbalanced')
+    end
 
     EigenvaluesCtrl = eig(WCtrl);
     [~,eix] = max(real(EigenvaluesCtrl));
     
-    [brevr,bixev] = sort(real(EigenvaluesCtrl),'descend');
-    bievr = imag(EigenvaluesCtrl(bixev));
 
 
     if real(EigenvaluesCtrl(eix)) >= 1
@@ -70,30 +109,27 @@ function [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,B
 
     DiffCtrl = SpatialCoupling(WCtrl,E,I,Coords);
 
-
     % Visual overview
     
     fig = figure();
     
+    
     subplot(2,2,1);
-    bar(DiffCtrl);
-    ylim([-30 70]);
+    SpatialCoupling(WCtrl,E,I,Coords);
+    
+    ylim([-30 70])
     box off
     
     subplot(2,2,2);
-    scatter(brevr,bievr);
-    vline(1);
-    % xlim([-1.5,1.5]);
-    axis equal
-    box off
+    EigenSpectrum(WCtrl);
+
     
     subplot(2,2,3:4);
     plot(RatesCtrl);
-    grid();
-    xlabel('Time (ms)');
-    ylabel('Rate (Hz)');
+    xlabel('Time','FontSize',20);
+    ylabel('Rate','FontSize',20);
     xlim([0,10000]);
-    ylim([0,50]);
+    ylim([0,70]);
     box off
     
     set(gcf, 'WindowState', 'maximized');

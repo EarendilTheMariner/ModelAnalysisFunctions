@@ -251,20 +251,22 @@ save("ModeCounts");
 
 
 fig = figure;
-BarVals = [1,1,1,1,1,1];
-x = categorical({'N = 200', 'N = 500', 'N = 1000', 'N = 2000', 'N = 5000', 'N = 10000'});
+BarVals = [Bal, NoBal];
+x = categorical({'Balanced', 'Unbalanced'});
 x = reordercats(x,string(x));
-bar(x,BarVals,0.3);
-yLabel = ylabel('f');
-title('Fraction Of Complex Dominant Modes')
+bar(x,BarVals,0.1);
+yLabel = ylabel('Norm. Oscillatory Gain Range');
+yticks([0 0.5 1]);
+%title('Fraction Of Complex Dominant Modes')
 set(gca, 'xticklabel', x);
 set(yLabel, 'FontSize', 18); % Set y-axis label font size
 set(gca, 'FontSize', 18);
+colororder("earth")
+ylim([0 1]);
 box off
-grid()
 set(gcf, 'WindowState', 'maximized');
 drawnow;  % Ensure the plot is fully rendered
-save2pdf(fig,['./'],['ComplexFractionDist'],'-dpdf');
+save2pdf(fig,['./'],['OscillatoryRange'],'-dpdf');
 
 
 
@@ -445,7 +447,7 @@ for ii = 1:length(GainSweep)
     end
     vline(1);
     set(gcf, 'WindowState', 'maximized');
-
+    
     drawnow;  % Ensure the plot is fully rendered
     frame = getframe(gcf);  % Get the current frame
     im = frame2im(frame); % Convert the frame to an image
@@ -554,17 +556,17 @@ vline(1);
 axis equal
 box off
 
-
-GainSweep = linspace(0,3,100);
+%% BUMP CONTROL LOOP
+GainSweep = linspace(0.1,2,100);
 for ii = 1:length(GainSweep)
     close all
-    clearvars -except ii Coords E I W GainSweep
+    clearvars -except ii Coords E I W GainSweep 
     folderName = sprintf('Iteration_%d', ii);
     mkdir(folderName);
     cd(folderName);    
 
 
-    [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,1,GainSweep(ii));
+    [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,2,GainSweep(ii),'Balance',false);
     save("WCtrl.mat", "WCtrl")
     save("DiffCtrl.mat","DiffCtrl");
     save("RatesCtrl.mat","RatesCtrl");
@@ -573,49 +575,103 @@ for ii = 1:length(GainSweep)
     save("BumpScaling.mat","BumpScaling")
     cd ..
 end
-    
 
-for ii = 1:99
+
+
+cd ..
+cd BumpSweep2&4NoBal
+
+GainSweep = linspace(0.1,2,100);
+for ii = 1:length(GainSweep)
     close all
-    clearvars -except ii
-    folderName = sprintf('Iteration_%d', ii+1);
+    clearvars -except ii Coords E I W GainSweep 
+    folderName = sprintf('Iteration_%d', ii);
+    mkdir(folderName);
     cd(folderName);    
-    load("DiffCtrl.mat");
-    load("EigenvaluesCtrl.mat");
+
+
+    [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,2,GainSweep(ii));
+    save("WCtrl.mat", "WCtrl")
+    save("DiffCtrl.mat","DiffCtrl");
+    save("RatesCtrl.mat","RatesCtrl");
+    save("EigenvaluesCtrl.mat","EigenvaluesCtrl");
+    BumpScaling = GainSweep(ii);
+    save("BumpScaling.mat","BumpScaling")
+    cd ..
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% GIF LOOP
+for ii = 1:100
+    close all
+    clearvars -except ii E I Coords
+    folderName = sprintf('Iteration_%d', ii);
+    cd(folderName);    
+ %   load("DiffCtrl.mat");
+ %   load("EigenvaluesCtrl.mat");
+    load('WCtrl.mat');
     load("RatesCtrl.mat");
 
     cd ..
 
-    [brevr,bixev] = sort(real(EigenvaluesCtrl),'descend');
-    bievr = imag(EigenvaluesCtrl(bixev));
-
     % Visual overview
     
-    fig = figure();
+    figure;
+
+    ha = axes('units','normalized','position',[0 0 1 1]);uistack(ha,'bottom');
+    imshow('Background_V2.png');
+    truesize
+    set(ha,'handlevisibility','off','visible','off')
+    fig = gcf;
     
     subplot(2,2,1);
-    x = linspace(-1000,990,200);
-    bar(x,DiffCtrl);
+    SpatialCoupling(WCtrl,E,I,Coords);
+    set(subplot(2,2,1),'Color','none')
     ylim([-30 70])
+    yticks([-30 0 30 60])
     box off
     
     subplot(2,2,2);
-    scatter(brevr,bievr);
-    vline(1);
-    % xlim([-1.5,1.5]);
-    axis equal
-    box off
+    EigenSpectrum(WCtrl);
+    set(subplot(2,2,2),'Color','none')
+    xticks([0 0.5 1]);
+    yticks([-0.25 0 0.25]);
+
     
     subplot(2,2,3:4);
+
     plot(RatesCtrl);
-    grid();
-    xlabel('Time (ms)');
-    ylabel('Rate (Hz)');
+    set(subplot(2,2,3:4),'Color','none')
+    xlabel('Time','FontSize',20);
+    ylabel('Rate','FontSize',20);
+    xticks([0 5000 10000]);
+    yticks([0 30 60]);
     xlim([0,10000]);
-    ylim([0,70]);
+    ylim([0,60]);
     box off
 
-    set(gcf, 'WindowState', 'maximized');
+    set(fig, 'WindowState', 'maximized');
+   % copygraphics(fig, 'BackgroundColor', 'white', 'ContentType', 'vector');
+
     drawnow;  % Ensure the plot is fully rendered
     frame = getframe(gcf);  % Get the current frame
     im = frame2im(frame); % Convert the frame to an image
@@ -623,7 +679,7 @@ for ii = 1:99
     im = imread('temp.png');
     [imind,cm] = rgb2ind(im,256);  % Convert the image to indexed color
 
-    filename = 'Bump4Sweep.gif';
+    filename = 'Bump2&4BalSweepPretty.gif';
 
     % Write to GIF
     if ii == 1
@@ -633,64 +689,364 @@ for ii = 1:99
     end
 end
 
+%% FREQUENCY LOOP
+Amps = [];
+Freqs = [];
+BumpScalars = [];
 
-
-
-I = logical(I);
-E = logical(E);
-WRaw = W;
-Dist = bsxfun(@minus,Coords,Coords');
-L = range(Coords,2);
-edges = -L:10:L;
-InhNegBump = (Dist(:,:) < 0) & (WRaw(:,:) < 0);
-
-
-BumpScale = linspace(0,3,100);
 for ii = 1:100
-    close all
-    clearvars -except ii WRaw E I BumpScale InhNegBump
+  %  close all
+    clearvars -except ii Freqs BumpScalars ImagParts RealParts
     folderName = sprintf('Iteration_%d', ii);
-    cd(folderName);   
+    cd(folderName);
 
-    W = WRaw;
-
-    W(InhNegBump) = BumpScale(ii).*W(InhNegBump);
-
-    W = BalanceConnectivity(W);
-
-    Eigenvalues = eig(W);
-
-    [~,eix] = max(real(Eigenvalues));
-    
-    DominantMode = Eigenvalues(eix);
-    
-    GlobalScaling = 1/(real(DominantMode)*0.95);
-    save("GlobalScaling.mat","GlobalScaling");
-    BumpScaling = BumpScale(ii);
-    save("BumpScaling.mat","BumpScaling");
-    cd ..
-end
-
-BumpScaleFactors = [];
-GlobalScaleFactors = [];
-for ii = 1:100
-    clearvars -except ii BumpScaleFactors GlobalScaleFactors
-    folderName = sprintf('Iteration_%d', ii);
-    cd(folderName);   
+    load("RatesCtrl.mat");
     load("BumpScaling.mat");
-    load("GlobalScaling.mat");
-    BumpScaleFactors = [BumpScaleFactors BumpScaling];
-    GlobalScaleFactors = [GlobalScaleFactors GlobalScaling];
+
+    [~,Frequency] = ComputeFrequency(RatesCtrl);
+
+
+    Freqs = [Freqs Frequency];
+    BumpScalars = [BumpScalars BumpScaling];
+
     cd ..
 end
 
 
 
 
-figure;
-scatter(BumpScaleFactors,GlobalScaleFactors);
-ylabel("Global Scaling Factor (after balancing)")
-xlabel("Bump Scaling Factor")
+%% FREQUENCY SUMMARYS FIGURE
+fig = figure;
+scatter(linspace(0.01,3,100),NormImagParts/(2*pi));
+hold on
+scatter(linspace(0.01,3,100),Freqs,[]);
+legend('Imaginary Part','∼ Frequency','Location','northeast');
+legend('boxoff');
+legend('FontSize',20);
+%ylabel('Norm. Units','FontSize',20);
+xlabel('Bump 4 Scale Factor', 'FontSize',20);
+%ylabel('Norm. Units','FontSize',20);
+box off
+
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['RawFrequencySummary'],'-dpdf');
+
+%% SPATIAL ACTIVITY LOOP
+
+MeanRMS = zeros(100,1);
+Freqs = zeros(100,1);
+
+for ii = 1:100
+    clearvars -except ii MeanRMS Freqs
+    folderName = sprintf('Iteration_%d', ii);
+    cd(folderName);
+    load('RatesCtrl.mat');
+  %  Amps = rms(RatesCtrl);
+   % if isempty(Amps);
+  %      MeanRMS(ii,1) = NaN;
+  %  else
+  %      MeanRMS(ii,1) = mean(Amps);
+   % end
+    [~, Frequency] = ComputeFrequency(RatesCtrl);
+    Freqs(ii,1) = Frequency;
+    cd ..
+end
+
+fig = figure;
+set(gcf, 'WindowState', 'maximized');
+scatter(linspace(0.001,2,100),MeanRMS/max(MeanRMS),[],'red','filled');
+xlim([0 2]);
+ylim([0 1]);
+
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['AmplitudeVsBump3'],'-dpdf');
+
+%% SPATIAL DISTRIBUTION VS FREQUENCY PLOTS
+fig = figure;
+set(gcf, 'WindowState', 'maximized');
+Sweep = round(linspace(7,100,9));
+for ii = 1:length(Sweep)
+    clearvars -except ii fig Sweep ImagParts
+    folderName = sprintf('Iteration_%d', Sweep(ii));
+    cd(folderName);
+
+    load('RatesCtrl.mat');
+    load('BumpScaling.mat');
+
+    if ii == 1
+
+        subplot(3,3,ii)
+        imagesc(flipud(RatesCtrl));
+        box off
+        set(gca, 'YDir', 'normal'); 
+        title(['Bump Scaling Factor = ', num2str(round(BumpScaling,2)), ', Norm. Frequency = ', num2str(round(ImagParts(Sweep(ii)),2))],'FontSize',16);
+        xlabel('1D Spatial Coordinate','FontSize',16);
+        ylabel('Time (ms)','FontSize',16);
+        yticks([1 5000 10000]);
+        box off
+        hold on
+        cd ..  
+    else 
+        subplot(3,3,ii)
+        imagesc(flipud(RatesCtrl));
+        box off
+        title(['Bump Scaling Factor = ', num2str(round(BumpScaling,2)), ', Norm. Frequency = ', num2str(round(ImagParts(Sweep(ii)),2))],'FontSize',16);
+        yticks([1 5000 10000]);
+        set(gca, 'YDir', 'normal');
+        hold on
+        cd ..
+    end
+end
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['SpatialActivitySampling'],'-dpdf');
+
+
+
+
+
+
+
+
+fig = figure;
+
+scatter(linspace(0.001,2,100),AmpsCenter);
+xlim([0 2]);
+ylim([20 45]);
+ylabel('Oscillation Amplitude');
+xlabel('sp3 Gain')
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['AmplitudeVsSP3'],'-dpdf');
+
+
+
+fig = figure;
+scatter(linspace(0.001,2,100),FreqsCenter);
+xlim([0 2]);
+ylim([0 1]);
+ylabel('Oscillation Frequency');
+xlabel('sp3 Gain');
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['Frequency&SP3'],'-dpdf');
+
+fig = figure;
+scatter(linspace(0.001,2,100),AmpsB4);
+xlim([0 2]);
+ylim([20 45]);
+ylabel('Oscillation Amplitude');
+xlabel('sp4 Gain');
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['AmplitudeVsSP4'],'-dpdf');
+
+
+
+fig = figure;
+scatter(linspace(0.001,2,100),Freqs);
+xlim([0 2]);
+ylim([0 1]);
+ylabel('Oscillation Frequency');
+xlabel('sp4 Gain');
+
+
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['FrequencyVsSP4'],'-dpdf');
+
+
+BS = [];
+for ii = 1:100
+    clearvars -except ii BS
+    folderName = sprintf('Iteration_%d', ii);
+    cd(folderName);
+
+    load('RatesCtrl.mat');
+    [~,Frequency] = ComputeFrequency(RatesCtrl);
+    if ~isnan(Frequency)
+        load('BumpScaling.mat');
+        BS = [BS BumpScaling];
+    else 
+        disp('no oscillations')
+    end
+   
+    cd ..
+end
+
+
+%% Downsampled plot
+downsampled = downsample(RatesCtrl,50);
+fig = figure; 
+plot(linspace(1,10000,200),downsampled);
+xlabel('Time','FontSize',20);
+ylabel('Rate','FontSize',20);
+xlim([0,10000]);
+ylim([0,70]);
+box off
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['DownsampledRates_32'],'-dpdf');
+
+
+
+
+%% Projectome vs. Network Length
+ExtensionSweep = 1:1:10;
+for ii = 1:length(ExtensionSweep)
+    clearvars -except ii MeanDiff ExtensionSweep
+    close all
+
+    folderName = sprintf('Iteration_%d', ii);
+    mkdir(folderName);
+    cd(folderName);
+
+    sp4 = MeanDiff(123:185);
+
+    sp4_ext = kron(sp4,ones(ExtensionSweep(ii),1));
+
+    PDF = [zeros(1,length(sp4_ext)-length(sp4)) MeanDiff(1:122)' sp4_ext' MeanDiff(186:end)'];
+
+    [W, Diff, Eigenvalues, Coords, I, E] = BalancedRecStructured(8000,PDF',8000);
+
+    EigenStructures = EigenStructure(W,5);
+    save("EigenStructures.mat","EigenStructures");
+    save("W.mat","W");
+    save("Diff.mat","Diff");
+  %  save("Rates.mat","Rates");
+    save("Coords.mat","Coords");
+    save("I.mat","I");
+    save("E.mat","E");
+    save("Eigenvalues.mat","Eigenvalues");
+    EigenSpectrum(W);
+
+    fig = figure; 
+    subplot(2,1,1);
+    SpatialCoupling(W,E,I,Coords);
+    subplot(2,1,2);
+    bar(EigenStructures(:,1));
+    set(gcf, 'WindowState', 'maximized');
+    drawnow;  % Ensure the plot is fully rendered
+    save2pdf(fig,['./'],['SpatialOverview'],'-dpdf');
+
+
+
+    %SpatialActivityDistribution(W,Rates,Diff);
+    cd ..
+end
+    
+cd ..
+cd ProjectomeSweep/
+
+
+ProjectomeSweep = [2/10 4/10 6/10 8/10 10/10 12/10 14/10 16/10 18/10 20/10];
+
+for ii = 1:length(ProjectomeSweep)
+    clearvars -except ii MeanDiff ProjectomeSweep LengthSweep
+    close all
+    
+    folderName = sprintf('Iteration_%d', ii);
+    mkdir(folderName);
+    cd(folderName);
+    PDF = kron(MeanDiff,ones(ProjectomeSweep(ii),1));
+    [W, Diff, Eigenvalues, Rates, Coords, I, E] = BalancedRecStructured(10000,PDF,10000);
+    save("W.mat","W");
+    save("Diff.mat","Diff");
+    save("Rates.mat","Rates");
+    save("Coords.mat","Coords");
+    save("I.mat","I");
+    save("E.mat","E");
+    save("Eigenvalues.mat","Eigenvalues");
+
+    SpatialActivityDistribution(W,Rates,Diff);
+    cd ..
+end
+
+
+
+for ii = 1:10
+    clearvars -except ii
+    folderName = sprintf('Iteration_%d', ii);
+    cd(folderName);
+    load('Rates.mat');
+    coeffs = pca(Rates);
+    PC1 = coeffs(:,1);
+    save('PC1.mat','PC1');
+    cd ..
+end
+
+
+
+
+
+SpatialFrequency = zeros(1,10);
+for ii = 1:10
+    clearvars -except ii SpatialFrequency
+    folderName = sprintf('Iteration_%d', ii);
+    cd(folderName);
+    load('PC1.mat');
+    Frequency = FrequencyFromFFT(PC1);
+    SpatialFrequency(ii) = Frequency;
+    cd ..
+end
+
+Ratios = [2/10 4/10 6/10 8/10 10/10 12/10 14/10 16/10 18/10 20/10];
+
+for ii = 1:10
+    clearvars -except ii Ratios
+    folderName = sprintf('Iteration_%d', ii);
+    cd(folderName);
+    load('W.mat');
+    [U,S,V] = svd(W);
+    save('LeftSingularVectors.mat','U');
+    save('SingularValues.mat','S');
+    save('RightSingularVectors.mat','V');
+    cd ..
+end
+
+
+
+
+
+
+fig = figure;
+subplot(3,1,1);
+bar(downsample_v2);
+ylim([-0.035 0.035]);
+box off
+subplot(3,1,2);
+bar(downsample_v5);
+ylim([-0.035 0.035]);
+box off
+subplot(3,1,3);
+bar(downsample_v8);
+ylim([-0.035 0.035]);
+box off 
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['EigenStructer_Iter_2_5_8'],'-dpdf');
+
+
+
+
+
+
+load('RatesCtrl.mat');
+fig = figure;
+plot(RatesCtrl(:,500));
+xlim([0 10000]);
+ylim([0 70]);
+box off 
+set(gcf, 'WindowState', 'maximized');
+drawnow;  % Ensure the plot is fully rendered
+save2pdf(fig,['./'],['Neuron500Example'],'-dpdf');
+
+
+
+
+
+
+
 
 
 

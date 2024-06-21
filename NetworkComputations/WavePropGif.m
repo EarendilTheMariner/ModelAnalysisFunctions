@@ -1,23 +1,14 @@
-function WavePropGif(Rates,W,I,E,Coords)
+function WavePropGif(Rates)
 
-    [Per,~] = ComputeFrequency(Rates);
-    PerRates = Rates(3000:3000+Per,:);
-    Snaps = round(linspace(1,Per,100));
-    
-    for ii = 1:length(Snaps)
+    for ii = 9000:10:14000
         close all
-        clearvars -except Snaps ii PerRates Per W E I Coords
-        Space = PerRates(Snaps(ii),:);
+        clearvars -except Rates ii
+        Space = Rates(ii,:);
         figure; 
-        subplot(1,2,2)
         set(gcf, 'WindowState', 'maximized');
         bar(Space);
-        ylim([0 45]);
-        xlabel('1D Space','FontSize',20);
-        ylabel('Firing Rate', 'FontSize',20);
-        subplot(1,2,1)
-        SpatialCoupling(W,E,I,Coords);
-    
+        ylim([0 70]);
+        box off
     
         drawnow;  % Ensure the plot is fully rendered
         frame = getframe(gcf);  % Get the current frame
@@ -29,10 +20,10 @@ function WavePropGif(Rates,W,I,E,Coords)
         filename = 'WavePropagationC2.gif';
     
         % Write to GIF
-        if ii == 1
-            imwrite(imind,cm,filename,'gif', 'Loopcount',inf, 'DelayTime', 0.2);
+        if ii == 9000
+            imwrite(imind,cm,filename,'gif', 'Loopcount',inf, 'DelayTime', 0.1);
         else
-            imwrite(imind,cm,filename,'gif','WriteMode','append', 'DelayTime', 0.2);
+            imwrite(imind,cm,filename,'gif','WriteMode','append', 'DelayTime', 0.1);
         end
     end
 

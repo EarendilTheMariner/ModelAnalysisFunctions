@@ -8,17 +8,20 @@ function Frequency = FrequencyFromFFT(Signal)
     Y = fft(Signal);
     X = Fs/L*(0:L-1);
     Y(length(X)/2:end) = 0;
+    Y(1) = 0;
 
 
     [~,ix] = max(abs(Y));
 
-    Frequency = X(ix)*L;
+    Frequency = X(ix);
+    %Frequency = Frequency*1000;
+    
 
-    figure;
-    plot(X,abs(Y),"LineWidth",3)
-    title("Complex Magnitude of fft Spectrum")
-    xlabel("f (Hz)")
-    ylabel("|fft(X)|")
+  %  figure;
+  %  plot(X,abs(Y),"LineWidth",3)
+  %  title("Complex Magnitude of fft Spectrum")
+  %  xlabel("f (Hz)")
+  %  ylabel("|fft(X)|")
 end
 
 

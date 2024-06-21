@@ -1391,7 +1391,7 @@ for ii=1:length(ShiftSweep)
     cd ..
 end
 
-MeanFrequencies = [mean(imag(one)) mean(imag(two)) mean(imag(three)) mean(imag(four)) mean(imag(five)) mean(imag(six))];
+MeanFrequencies = [mean(imag(one)) mean(imag(two)) mean(imag(three)) mean(imag())]
 for ii=1:100
     clearvars -except ii NormalizedFrequenciesN10000
     folderName = sprintf('Iteration_%d', ii);

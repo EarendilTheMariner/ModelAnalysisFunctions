@@ -1,4 +1,4 @@
-function [W,Coords,Diff,PopMat,E,I] = OnlineControlNetwork(Size,Length,MeanDiff)
+function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDiff)
 
     gain = 1;
     Var = 0.1;
@@ -39,7 +39,7 @@ function [W,Coords,Diff,PopMat,E,I] = OnlineControlNetwork(Size,Length,MeanDiff)
     sp3 = logical(sp3);
     sp3 = repmat(sp3',n/20,1);
 
-    PopMat = zeros(L,5);
+    PopMat = zeros(n,5);
     PopMat(:,1) = sp1;
     PopMat(:,2) = sp2;
     PopMat(:,3) = sp3;
@@ -68,33 +68,32 @@ function [W,Coords,Diff,PopMat,E,I] = OnlineControlNetwork(Size,Length,MeanDiff)
     Padding = zeros(LengthDiff/2,1);
     
 
-    PDF1Ix = MeanDiff > 0;
-    PDF1Ix(round(length(MeanDiff)/4):end) = 0;
+    PDF1Ix = zeros(length(MeanDiff),1);
+    PDF1Ix(1:22) = 1;
     PDF1Ix = [Padding; PDF1Ix; Padding];
     PDF1Ix = logical(PDF1Ix);
     
 
-    PDF2Ix = MeanDiff < 0;
-    PDF2Ix(round(length(MeanDiff)/2):end) = 0;
+    PDF2Ix = zeros(length(MeanDiff),1);
+    PDF2Ix(23:82) = 1;
     PDF2Ix = [Padding; PDF2Ix; Padding];
     PDF2Ix = logical(PDF2Ix);
 
 
-    PDF3Ix = MeanDiff > 0;
-    PDF3Ix(1:round(length(MeanDiff)/4)) = 0;
-    PDF3Ix(3*round(length(MeanDiff)/4):end) = 0;
+    PDF3Ix = zeros(length(MeanDiff),1);
+    PDF3Ix(83:122) = 1;
     PDF3Ix = [Padding; PDF3Ix; Padding];
     PDF3Ix = logical(PDF3Ix);
 
 
-    PDF4Ix = MeanDiff < 0;
-    PDF4Ix(1:round(length(MeanDiff)/2)) = 0;
+    PDF4Ix = zeros(length(MeanDiff),1);
+    PDF4Ix(123:185) = 1;
     PDF4Ix = [Padding; PDF4Ix; Padding];
     PDF4Ix = logical(PDF4Ix);
 
 
-    PDF5Ix = MeanDiff > 0;
-    PDF5Ix(1:3*round(length(MeanDiff)/4)) = 0;
+    PDF5Ix = zeros(length(MeanDiff),1);
+    PDF5Ix(186:end) = 1; 
     PDF5Ix = [Padding; PDF5Ix; Padding];
     PDF5Ix = logical(PDF5Ix);
 
@@ -105,51 +104,68 @@ function [W,Coords,Diff,PopMat,E,I] = OnlineControlNetwork(Size,Length,MeanDiff)
 %% Spatial PDFs for subpopulations
 
 
-    PDF1 = zeros(1,length(edges)-1);
-    PDF1(PDF1Ix) = MeanDiff(PDF1Ix);
+    PDF1 = MeanDiff;
+    PDF1(~PDF1Ix) = false;
+    Domain = 1:length(MeanDiff);
+    Domain = Domain';
+    GaussFit = fit(Domain,PDF1,'gauss1');
+    PDF1 = GaussFit(Domain);
     PDF1 = PDF1/sum(PDF1);
 
-
-    PDF2 = zeros(1,length(edges)-1);
-    PDF2(PDF2Ix) = MeanDiff(PDF2Ix);
+    PDF2 = MeanDiff;
+    PDF2(~PDF2Ix) = false;
+    Domain = 1:length(MeanDiff);
+    Domain = Domain';
+    GaussFit = fit(Domain,PDF2,'gauss1');
+    PDF2 = GaussFit(Domain);
     PDF2 = PDF2/sum(PDF2);
 
-    PDF3 = zeros(1,length(edges)-1);
-    PDF3(PDF3Ix) = MeanDiff(PDF3Ix);
+    PDF3 = MeanDiff;
+    PDF3(~PDF3Ix) = false;
+    Domain = 1:length(MeanDiff);
+    Domain = Domain';
+    GaussFit = fit(Domain,PDF3,'gauss1');
+    PDF3 = GaussFit(Domain);
     PDF3 = PDF3/sum(PDF3);
-    
 
-    PDF4 = zeros(1,length(edges)-1);
-    PDF4(PDF4Ix) = MeanDiff(PDF4Ix);
+    PDF4 = MeanDiff;
+    PDF4(~PDF4Ix) = false;
+    Domain = 1:length(MeanDiff);
+    Domain = Domain';
+    GaussFit = fit(Domain,PDF4,'gauss1');
+    PDF4 = GaussFit(Domain);
     PDF4 = PDF4/sum(PDF4);
 
-    PDF5 = zeros(1,length(edges)-1);
-    PDF5(PDF5Ix) = MeanDiff(PDF5Ix);
+    PDF5 = MeanDiff;
+    PDF5(~PDF5Ix) = false;
+    Domain = 1:length(MeanDiff);
+    Domain = Domain';
+    GaussFit = fit(Domain,PDF5,'gauss1');
+    PDF5 = GaussFit(Domain);
     PDF5 = PDF5/sum(PDF5);
-
 
 
 %% Connection propabilies
 
-    Prob1 = 20*PDF1(Y1);
+    Prob1 = 17*PDF1(Y1);
     Prob1(Prob1 > 1) = 1;
   %  Prob1(sp4,:) = Prob1(sp4,:)*0.1;
 
-    Prob2 = 20*PDF2(Y2);
+    Prob2 = 17*PDF2(Y2);
     Prob2(Prob2 > 1) = 1;
-    Prob2(sp3,:) = Prob2(sp3,:)*0.75;
-    Prob2(sp2,:) = Prob2(sp2,:)*0.1;
+%    Prob2(sp3,:) = Prob2(sp3,:)*0.75;
+%    Prob2(sp2,:) = Prob2(sp2,:)*0.1;
 
-    Prob3 = 20*PDF3(Y3);
+    Prob3 = 17*PDF3(Y3);
     Prob3(Prob3 > 1) = 1;
-    Prob3(sp4,:) = Prob3(sp4,:)*0.75;
+%    Prob3(sp4,:) = Prob3(sp4,:)*0.75;
 %    Prob3(sp4,:) = Prob3(sp4,:)*0.1;
 
-    Prob4 = 20*PDF4(Y4);
+    Prob4 = 17*PDF4(Y4);
     Prob4(Prob4 > 1) = 1;
-    Prob4(sp4,:) = Prob4(sp4,:)*0.1;
+%    Prob4(sp4,:) = Prob4(sp4,:)*0.1;
 
-    Prob5 = 20*PDF5(Y5);
+    Prob5 = 17*PDF5(Y5);
     Prob5(Prob5 > 1) = 1;
  %   Prob5(sp4,:) = Prob5(sp4,:)*0.1;
     
@@ -195,7 +211,7 @@ function [W,Coords,Diff,PopMat,E,I] = OnlineControlNetwork(Size,Length,MeanDiff)
     W(:,sp4) = sp4Weights;
     W(:,sp5) = sp5Weights;
 
-    [W,~] = BalanceNormalize(W);
+   % [W,~] = BalanceNormalize(W);
 
     E = sp1 + sp3 + sp5;
     I = sp2 + sp4;
@@ -204,28 +220,6 @@ function [W,Coords,Diff,PopMat,E,I] = OnlineControlNetwork(Size,Length,MeanDiff)
 
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-    
-
-
-
 
 
 

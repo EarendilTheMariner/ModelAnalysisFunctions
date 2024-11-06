@@ -1,6 +1,6 @@
 function EigenSpectrum(W,varargin)
 
- 
+  %  fig = figure;
     Eigenvalues = eig(W);
     [brevr,bixev] = sort(real(Eigenvalues),'descend');
     bievr = imag(Eigenvalues(bixev));
@@ -9,14 +9,14 @@ function EigenSpectrum(W,varargin)
     xlabel('Real','FontSize',20);
     ylabel('Imaginary','FontSize',20);
     vline(1);
-    xlim([-0.2,1.3]);
-    ylim([-0.3, 0.3]);
+  %  xlim([-0.3,1.3]);
+  %  ylim([-1.3, 1.3]);
    
     axis equal
     box off
     set(gcf, 'WindowState', 'maximized');
- %   drawnow;  % Ensure the plot is fully rendered
- %   save2pdf(fig,['./'],['Spectrum'],'-dpdf');
+    drawnow;  % Ensure the plot is fully rendered
+%    save2pdf(fig,['./'],['Spectrum'],'-dpdf');
         
 
 end

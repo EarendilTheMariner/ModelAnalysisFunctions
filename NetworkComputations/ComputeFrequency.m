@@ -1,4 +1,4 @@
-function [Per, Frequency] = ComputeFrequency(Rates)
+function [Frequency] = ComputeFrequency(Rates)
 
     %% 
 
@@ -13,13 +13,13 @@ function [Per, Frequency] = ComputeFrequency(Rates)
         
         if length(locs) > 1 & var(PCRef) > 1
     
-        Per = mean(diff(locs));
-        Frequency = 1./(Per/1000);
+            Per = mean(diff(locs));
+            Frequency = 1./(Per/1000);
 
         else    
         
-        Per = NaN;
-        Frequency = NaN;
+            Per = NaN;
+            Frequency = NaN;
         end
          
     end

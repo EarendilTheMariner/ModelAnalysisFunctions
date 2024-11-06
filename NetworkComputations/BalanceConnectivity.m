@@ -39,8 +39,6 @@ function [Connectivity,Sparsity] = BalanceConnectivity(Connectivity,varargin)
         r = (numel(Connectivity(Connectivity>0))/numel(Connectivity(Connectivity<0)));
         Sparsity = nnz(~Connectivity)/numel(Connectivity);
         Connectivity = Connectivity./(sqrt(Sparsity*(1.-Sparsity)*(1.+(r^2))/2)*sqrt(length(Connectivity)));
-    else
-        disp("Raw Balance")
     end
 
 end

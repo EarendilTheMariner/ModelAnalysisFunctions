@@ -1,4 +1,4 @@
-function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDiff)
+function [W,Coords,Diff,PopMat,E,I,PDFs] = SymmetricNetwork(Size,Length,MeanDiff,AsymPopLoc)
 
     gain = 1;
     Var = 0.1;
@@ -15,36 +15,42 @@ function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDif
     IndxTemp = zeros(1,20);
 
     sp1 = IndxTemp;
-    sp1([1, 11]) = 1;
+    sp1([9, 19]) = 1;
     sp1 = logical(sp1);
     sp1 = repmat(sp1',n/20,1);
 
     sp5 = IndxTemp;
-    sp5([2, 12]) = 1;
+    sp5([1, 11]) = 1;
     sp5 = logical(sp5);
     sp5 = repmat(sp5',n/20,1);
 
     sp4 = IndxTemp;
-    sp4([5,6,7,13,14]) = 1;
+    sp4([2,7,8,12,17]) = 1;
     sp4 = logical(sp4);
     sp4 = repmat(sp4',n/20,1);
 
     sp2 = IndxTemp;
-    sp2([3,4,15,16,17]) = 1;
+    sp2([3,10,13,18,20]) = 1;
     sp2 = logical(sp2);
     sp2 = repmat(sp2',n/20,1);
 
     sp3 = IndxTemp;
-    sp3([8,9,10,18,19,20]) = 1;
+    sp3([4,6,14,16]) = 1;
     sp3 = logical(sp3);
     sp3 = repmat(sp3',n/20,1);
 
-    PopMat = zeros(n,5);
+    sp6 = IndxTemp;
+    sp6([5,15]) = 1;
+    sp6 = logical(sp6);
+    sp6 = repmat(sp6',n/20,1);
+
+    PopMat = zeros(n,6);
     PopMat(:,1) = sp1;
     PopMat(:,2) = sp2;
     PopMat(:,3) = sp3;
     PopMat(:,4) = sp4;
     PopMat(:,5) = sp5;
+    PopMat(:,6) = sp6;
 
 
 %% Distances from subpopulations
@@ -54,12 +60,14 @@ function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDif
     Dist3 = round(Dist(:,sp3),0);
     Dist4 = round(Dist(:,sp4),0);
     Dist5 = round(Dist(:,sp5),0);
+    Dist6 = round(Dist(:,sp6),0);
 
     Y1 = discretize(Dist1,edges);
     Y2 = discretize(Dist2,edges);
     Y3 = discretize(Dist3,edges);
     Y4 = discretize(Dist4,edges);
     Y5 = discretize(Dist5,edges);
+    Y6 = discretize(Dist6,edges);
 
 %%  Subpopulation projectome indices for PDFs
 
@@ -69,19 +77,19 @@ function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDif
     
 
     PDF1Ix = zeros(length(MeanDiff),1);
-    PDF1Ix(1:22) = 1;
+    PDF1Ix(1:15) = 1;
     PDF1Ix = [Padding; PDF1Ix; Padding];
     PDF1Ix = logical(PDF1Ix);
     
 
     PDF2Ix = zeros(length(MeanDiff),1);
-    PDF2Ix(23:82) = 1;
+    PDF2Ix(16:78) = 1;
     PDF2Ix = [Padding; PDF2Ix; Padding];
     PDF2Ix = logical(PDF2Ix);
 
 
     PDF3Ix = zeros(length(MeanDiff),1);
-    PDF3Ix(83:122) = 1;
+    PDF3Ix(79:122) = 1;
     PDF3Ix = [Padding; PDF3Ix; Padding];
     PDF3Ix = logical(PDF3Ix);
 
@@ -144,30 +152,46 @@ function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDif
     PDF5 = GaussFit(Domain);
     PDF5 = PDF5/sum(PDF5);
 
+    Domain = 1:length(MeanDiff);
+    Domain = Domain';
+    y = zeros(1,length(MeanDiff));
+    y(AsymPopLoc:AsymPopLoc+14) = MeanDiff(1:15);
+    GaussFit = fit(Domain,y','gauss1');
+    PDF6 = GaussFit(Domain);
+    PDF6 = PDF6/sum(PDF6);
+
+    PDFs = [PDF1'; PDF2'; PDF3'; PDF4'; PDF5'; PDF6'];
+    PDFs = PDFs';
+
 
 %% Connection propabilies
 
-    Prob1 = 17*PDF1(Y1);
+    Prob1 = 20*PDF1(Y1);
     Prob1(Prob1 > 1) = 1;
   %  Prob1(sp4,:) = Prob1(sp4,:)*0.1;
 
-    Prob2 = 17*PDF2(Y2);
+    Prob2 = 20*PDF2(Y2);
     Prob2(Prob2 > 1) = 1;
 %    Prob2(sp3,:) = Prob2(sp3,:)*0.75;
 %    Prob2(sp2,:) = Prob2(sp2,:)*0.1;
 
-    Prob3 = 17*PDF3(Y3);
+    Prob3 = 20*PDF3(Y3);
     Prob3(Prob3 > 1) = 1;
 %    Prob3(sp4,:) = Prob3(sp4,:)*0.75;
 %    Prob3(sp4,:) = Prob3(sp4,:)*0.1;
 
-    Prob4 = 17*PDF4(Y4);
+    Prob4 = 20*PDF4(Y4);
     Prob4(Prob4 > 1) = 1;
 %    Prob4(sp4,:) = Prob4(sp4,:)*0.1;
 
-    Prob5 = 17*PDF5(Y5);
+    Prob5 = 20*PDF5(Y5);
     Prob5(Prob5 > 1) = 1;
  %   Prob5(sp4,:) = Prob5(sp4,:)*0.1;
+
+    Prob6 = 20*PDF6(Y6);
+    Prob6(Prob6 > 1) = 1;
+
+
     
 
 %%  SYNAPSIFY! (Sample connections from probs)
@@ -182,6 +206,8 @@ function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDif
 
     sp5Cons = binornd(1,Prob5);
 
+    sp6Cons = binornd(1,Prob6);
+
     GainMat = normrnd(gain,Var,size(sp1Cons));
     sp1Weights = sp1Cons.*abs(GainMat);
 
@@ -192,6 +218,9 @@ function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDif
 
     GainMat = normrnd(gain,Var,size(sp5Cons));
     sp5Weights = sp5Cons.*abs(GainMat);
+
+    GainMat = normrnd(gain,Var,size(sp6Cons));
+    sp6Weights = -sp6Cons.*abs(GainMat);
 
 
     GainMat = normrnd(gain,Var,size(sp2Cons));
@@ -210,17 +239,17 @@ function [W,Coords,Diff,PopMat,E,I] = PopulationSplitNetwork(Size,Length,MeanDif
     W(:,sp3) = sp3Weights;
     W(:,sp4) = sp4Weights;
     W(:,sp5) = sp5Weights;
+    W(:,sp6) = sp6Weights;
 
-   % [W,~] = BalanceNormalize(W);
+    [W,~] = BalanceNormalize(W);
 
     E = sp1 + sp3 + sp5;
-    I = sp2 + sp4;
+    I = sp2 + sp4 + sp6;
 
-    Diff = SpatialCoupling(W,E,I,Coords,false);
+    Diff = SpatialCoupling(W,E,I,Coords,true);
 
 
 end
-
 
 
 

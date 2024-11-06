@@ -1,20 +1,23 @@
-function [W, Diff, Eigenvalues, Coords, I, E] = BalancedRecStructured(Size,MeanDiff,Length)
-
+function [W,Coords,Diff,E,I] = BalancedRecStructured(Size,Length,Projectome)
+    rng("shuffle")
     gain = 1;
     Var = 0.1;
 
     n = Size;
     W = zeros(n,n);
     Coords = linspace(0,Length,n);
-    Dist = bsxfun(@minus,Coords,Coords');
+    Dist = -bsxfun(@minus,Coords,Coords');
     L = range(Coords,2);
     edges = -L:10:L;
+    MeanDiff = Projectome;
 
-    I = zeros(Size,1);
-    E = zeros(Size,1);
-
-    E(randi(Size,[1 Size/2])) = true;
-    I(~E) = true;
+    E = zeros(1,Size);
+    I = zeros(1,Size);
+    for ii = 1:2:Size
+        E(ii) = 1;
+        I(ii+1) = 1;
+    end
+    
 
     DistI = round(Dist(:,logical(I)),0);
     DistE = round(Dist(:,logical(E)),0);
@@ -58,7 +61,7 @@ function [W, Diff, Eigenvalues, Coords, I, E] = BalancedRecStructured(Size,MeanD
     GainMatI = normrnd(gain,Var,size(InhCons)); 
 
 
-    InhCons = -InhCons.*abs(GainMatI)*1.1;
+    InhCons = -InhCons.*abs(GainMatI);
     ExcCons = ExcCons.*abs(GainMatE);
 
     W = zeros(size(Dist));
@@ -66,9 +69,9 @@ function [W, Diff, Eigenvalues, Coords, I, E] = BalancedRecStructured(Size,MeanD
     W(:,logical(I)) = InhCons;
     W(:,logical(E)) = ExcCons;
 
-    [W,Eigenvalues] = BalanceNormalize(W);
+    W = BalanceNormalize(W);
 
-    Diff = SpatialCoupling(W,E,I,Coords);
+    Diff = SpatialCoupling(W,E,I,Coords,false);
     
    % Rates = SimulateNetwork(W,20000);
    % Rates = Rates(10001:end,:);

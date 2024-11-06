@@ -21,7 +21,7 @@ ComplexDoms = [];
 
 %% Save vars in unique iteration folder
 for ii=1:100
-    clearvars -except ii ComplexDoms
+    clearvars -except ii Mean
     folderName = sprintf('Iteration_%d', ii);
     mkdir(folderName);
     cd(folderName);
@@ -557,22 +557,19 @@ axis equal
 box off
 
 %% BUMP CONTROL LOOP
+PopMat = logical(PopMat);
 GainSweep = linspace(0.1,2,100);
 for ii = 1:length(GainSweep)
     close all
-    clearvars -except ii Coords E I W GainSweep 
+    clearvars -except ii Coords E I W GainSweep PopMat 
     folderName = sprintf('Iteration_%d', ii);
     mkdir(folderName);
-    cd(folderName);    
+    cd(folderName);
+    WMod = W
+    WMod = W(:,PopMat(:,4)).*GainSweep(ii);
 
 
-    [WCtrl,DiffCtrl,EigenvaluesCtrl,RatesCtrl] = BumpControl(W,Coords,I,E,2,GainSweep(ii),'Balance',false);
-    save("WCtrl.mat", "WCtrl")
-    save("DiffCtrl.mat","DiffCtrl");
-    save("RatesCtrl.mat","RatesCtrl");
-    save("EigenvaluesCtrl.mat","EigenvaluesCtrl");
-    BumpScaling = GainSweep(ii);
-    save("BumpScaling.mat","BumpScaling")
+
     cd ..
 end
 
@@ -603,15 +600,15 @@ end
 
 
 %% GIF LOOP
-for ii = 1:41
+for ii = 1:185
     close all
-    clearvars -except ii Coords E I
+    clearvars -except ii 
     folderName = sprintf('Iteration_%d', ii);
     cd(folderName);    
  %   load("DiffCtrl.mat");
  %   load("EigenvaluesCtrl.mat");
     load('Output.mat');
-    load("Rates.mat");
+  %  load("Rates.mat");
 
     cd ..
 
@@ -619,36 +616,30 @@ for ii = 1:41
     
     fig = figure;
     
-    ha = axes('units','normalized','position',[0 0 1 1]);
-    uistack(ha,'bottom');
-    imshow('Background_V2.png');
-    truesize;
-    set(ha,'handlevisibility','off','visible','off');
+  %  ha = axes('units','normalized','position',[0 0 1 1]);
+  %  uistack(ha,'bottom');
+   % imshow('Background_V2.png');
+   % truesize;
+  %  set(ha,'handlevisibility','off','visible','off');
     fig = gcf;
     
-    subplot(2,2,1);
-    SpatialCoupling(W,E,I,Coords);
+    subplot(1,3,2);
+    SpatialCoupling(W,E,I,Coords,true);
     set(gca, 'Color', 'none');
-    ylim([-30 70]);
+    ylim([-20 50]);
     yticks([-30 0 30 60]);
     box off;
+ 
     
-    subplot(2,2,2);
+    subplot(1,3,3);
     EigenSpectrum(W);
     set(gca, 'Color', 'none');
     xticks([0 0.5 1]);
     yticks([-0.25 0 0.25]);
     box off;
     
-    subplot(2,2,3:4);
-    plot(Rates(10000:end-1,:));
-    set(gca, 'Color', 'none');
-    xlabel('Time (ms)', 'FontSize', 20);
-    ylabel('Firing Rate', 'FontSize', 20);
-    xticks([0 5000 10000]);
-    yticks([0 35 70]);
-    xlim([0 10000]);
-    ylim([0 70]);
+    subplot(1,3,1);
+    plot(PDFs);
     box off;
     
     set(fig, 'WindowState', 'maximized');
@@ -659,7 +650,7 @@ for ii = 1:41
     im = imread('temp.png');
     [imind, cm] = rgb2ind(im, 256);  % Convert the image to indexed color
     
-    filename = 'Bump2New.gif';
+    filename = 'Overview.gif';
     
     % Write to GIF
     if ii == 1
@@ -1131,32 +1122,28 @@ save2pdf(fig,['./'],['NormExpectedFrequency'],'-dpdf');
 % Offline Control
 
 
-S2 = abs(sum(WRef(:,logical(PopMat(:,2))),'all'));
-S4 = abs(sum(WRef(:,logical(PopMat(:,4))),'all'));
+S2 = abs(sum(W(:,logical(PopMat(:,2))),'all'));
+S4 = abs(sum(W(:,logical(PopMat(:,4))),'all'));
 STot = S2+S4;
-Sp2Sweep = linspace(0.1,1.85,100);
+Sp4Sweep = linspace(0.1,1.85,100);
 for ii = 1:100
     close all
-    clearvars -except ii WRef PopMat E I Coords Sp2Sweep S2 S4 STot
+    clearvars -except ii 
     folderName = sprintf('Iteration_%d', ii);
-    mkdir(folderName);
+ %   mkdir(folderName);
     cd(folderName);   
+    load('Output.mat');
+%   WMod = W.*1.1;
 
-    W = WRef;
+%   BS4 = Sp4Sweep(ii);
+ %  WMod(:,logical(PopMat(:,4))) = WMod(:,logical(PopMat(:,4))).*BS4;
+ 
+ %  BS2 = (STot-BS4*S4)/S2;
+ %  WMod(:,logical(PopMat(:,2))) = WMod(:,logical(PopMat(:,2))).*BS2;
+%   WMod = BalanceConnectivity(WMod);
 
-    BS2 = Sp2Sweep(ii);
-    W(:,logical(PopMat(:,2))) = W(:,logical(PopMat(:,2))).*BS2;
-
-    BS4 = (STot-BS2*S2)/S4;
-    W(:,logical(PopMat(:,4))) = W(:,logical(PopMat(:,4))).*BS4;
-  %  W = BalanceConnectivity(W);
-
-    save("BS2.mat","BS2");
-    save("BS4.mat","BS4");
-    save("W.mat","W");
-
-    Rates = SimulateNetwork(W,20000);
-    save("Rates.mat","Rates");
+    Rates = SimulateNetwork(WMod,20000);
+    save("Output.mat","WMod","Rates");
 
     cd ..
 end
@@ -1255,13 +1242,15 @@ save2pdf(fig,['./'],['PCAExample'],'-dpdf');
 
 
 fig = figure;
-EigenSpectrum(W.*1.1);
-xlim([-1.5 1.5]);
-ylim([-1.5 1.5]);
+bar(N.Projectome);
+vline(101)
+
+
+
 box off
 set(gcf, 'WindowState', 'maximized');
 drawnow;  % Ensure the plot is fully rendered
-save2pdf(fig,['./'],['ChaosState'],'-dpdf');
+save2pdf(fig,['./'],['Iter_50_SkewIllustration'],'-dpdf');
 
 
 
@@ -1340,23 +1329,21 @@ save2pdf(fig,['./'],['BalanceConditionDynamics'],'-dpdf');
 
 
 fig = figure;
-plot(Rates(10001:end,500));
-ylim ([0 70]);
+bar(N.Projectome);
+ylim([-40 50]);
 box off
 set(gcf, 'WindowState', 'maximized');
 drawnow;  % Ensure the plot is fully rendered
-save2pdf(fig,['./'],['RatesExample'],'-dpdf');
+save2pdf(fig,['./'],['Projectome_79'],'-dpdf');
 
 
 fig = figure;
+plot(ints,Skews/max(abs(Skews))); hold on; plot(ints,[-Freqs(1:50) Freqs(51:end)]/max(abs(Freqs)))
 set(gcf, 'WindowState', 'maximized');
-
-% Create the heatmap using imagesc
-imagesc(downsample(R,10));
 box off
-colormap(gray);
 drawnow;  % Ensure the plot is fully rendered
-save2pdf(fig,['./'],['HeatMapExample'],'-dpdf');
+save2pdf(fig,['./'],['Freq&Skew_Vs_Sp3Shift'],'-dpdf');
+
 
 
 
@@ -1378,29 +1365,83 @@ caxis([-maxAbsValue maxAbsValue]);
 colorbar;
 
 
-ShiftSweep = 0:5:200;
-for ii=1:length(ShiftSweep)
-    clearvars -except ii ShiftSweep
-    folderName = sprintf('Iteration_%d', ii);
-    mkdir(folderName);
+for jj=1:15
+    folderName = sprintf('Iteration_%d', jj);  
     cd(folderName);
+    load("Projectome.mat");
+    ProjectomeOne = Projectome(:,1);
+    Sweep = 1:20;
+    for ii=1:length(Sweep)
+        clearvars -except ii Sweep ProjectomeOne
+        folderName = sprintf('Iteration_%d', ii);
+        mkdir(folderName);
+        cd(folderName);
+    %    Projectome = Diffs(:,:,ii);
+    %    save("Projectome.mat","Projectome");
+    %    MeanAxonLength = MeanProjLength(:,:,ii)
+    %    save("MeanAxonLength.mat","MeanAxonLength");
+    %    load("Projectome.mat","Projectome");
+        [W,Coords,Diff,E,I] = BalancedRecStructured(1000,1000,ProjectomeOne);
+        save("Ouput");
+        %Rates = SimulateNetwork(W,20000);
+        %save("Rates.mat","Rates");
+        cd ..
+    end
+    cd ..
+end
 
-    [W,Coords,PopMat,E,I] = CenteredGaussiansSplit(1000,1000,ShiftSweep(ii));
-    save("Output.mat");
+Modes = [];
+SymIx = [];
+
+Freqs = [];
+Sweep = 1:185;
+for ii=1:length(Sweep)
+    clearvars -except ii Sweep Freqs
+    folderName = sprintf('Iteration_%d', ii);
+   % mkdir(folderName);
+    cd(folderName);
+  %  [W,Coords,Diff,PopMat,E,I,PDFs] = SymmetricNetwork(1000,1000,MeanDiff,Sweep(ii));
+   % save("Output.mat");
+    %DominantMode = eigs(W,1);
+ %   save("DominantMode.mat","DominantMode");
+ %   load("Output.mat");
+ %   R = SimulateNetwork(W,18000);
+ %   save("Rates.mat","R");
+    load("DominantMode.mat");
+    Frequency = abs(imag(DominantMode));
+%    load("Rates.mat");
+%    R = R(8001:end,:);
+%    [Per, Frequency] = ComputeFrequency(R)
+
+    Freqs = [Freqs Frequency];
+   % save("Output.mat");
+  %  R = SimulateNetwork(W,20000);
+  %  save("Rates.mat","R");
 
     cd ..
 end
 
-MeanFrequencies = [mean(imag(one)) mean(imag(two)) mean(imag(three)) mean(imag(four)) mean(imag(five)) mean(imag(six))];
+Skews = [];
 for ii=1:100
-    clearvars -except ii NormalizedFrequenciesN10000
+    clearvars -except ii Coords E I Skews
     folderName = sprintf('Iteration_%d', ii);
     cd(folderName);
-    load("DominantMode");
-    DominantMode = DominantMode/real(DominantMode);
-    NormalizedFrequenciesN10000 = [NormalizedFrequenciesN10000 DominantMode];
+    load("W.mat");
+    Skew = SkewnessFactor(W,E,I,Coords);
+    Skews = [Skews Skew];
+
     cd ..
 end
+
+fig = figure; 
+plot([1:2:40],PermMeans);
+
+ylim([160 300]);
+xlim([0 40]);
+set(gcf, 'WindowState', 'maximized');
+box off
+drawnow
+save2pdf(fig,['./'],['MeanOfPermutations'],'-dpdf');
 
 
 

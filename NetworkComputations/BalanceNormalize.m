@@ -1,21 +1,20 @@
-function [W,Eigenvalues] = BalanceNormalize(W)
-
+function [W,E] = BalanceNormalize(W,varargin)
+    % Imposes row wise (detailed) balance on W and scales the weights so
+    % if flag is true, scales W such that leading mode is slighlty suprastable, 
 
     W = BalanceConnectivity(W);
+    Normalize = true;
 
-    Eigenvalues = eig(W);
-
-    [~,eix] = max(real(Eigenvalues));
+    for ii = 1:2:length(varargin)
+        switch varargin{ii}
+            case 'Normalize'
+                Normalize = varargin{ii+1};
+        end
+    end
     
-    DominantMode = Eigenvalues(eix);
-    
-    W = W/(real(DominantMode)*0.95);
-    
-    Eigenvalues = eig(W);
-
- %   ScaleFactor = 1/(real(DominantMode)*0.95);
- %   save("GlobalScaling.mat","ScaleFactor");
-    
-
+    if Normalize
+        E = eigs(W,1);        
+        W = W/(real(E)*0.95);
+    end
 end
 

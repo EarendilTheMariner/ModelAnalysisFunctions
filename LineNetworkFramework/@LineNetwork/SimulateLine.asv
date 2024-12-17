@@ -26,7 +26,8 @@ function obj = SimulateLine(obj,t_steps,varargin)
                 noise_ampl = varargin{ii+1};
             case 'seed'
                 seed = varargin{ii+1};
-            case 'I_e'                
+            case 'I_e'
+                
                 I_e = varargin{ii+1};
             case 'V_init'
                 V_init = varargin{ii+1};
@@ -78,7 +79,7 @@ function obj = SimulateLine(obj,t_steps,varargin)
             R(t, i) = f_V_func(V(i,t), threshold, gain(i, t), f_max);
        end      
     end
-    obj.Voltage = V';
+    obj.
     obj.Rates = R;
     toc
 end

@@ -10,7 +10,7 @@ function Diff = SpatialCoupling(W,E,I,Coords,plotFlag)
     DistEx = Dist(:,Ex);
     DistIn = Dist(:,In);
     L = round(range(Coords),-2);
-    edges = [-L:100:L];
+    edges = [-L:10:L];
     yin = discretize(DistIn(ProjIn~= 0), edges);
     yex = discretize(DistEx(ProjEx~= 0), edges);
     [GnIn,Min,Cin] = grpstats(ProjIn(ProjIn~=0), yin,["gname","mean","numel"]);
@@ -23,7 +23,6 @@ function Diff = SpatialCoupling(W,E,I,Coords,plotFlag)
     MExZ(str2double(GnEx)) = Mex;
     CInZ(str2double(GnIn)) = Cin;
     CExZ(str2double(GnEx)) = Cex;
-
     Diff = abs(MExZ.*CExZ)-abs(MInZ.*CInZ);
 
 %    fig = figure;

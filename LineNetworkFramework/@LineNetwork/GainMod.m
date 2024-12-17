@@ -54,9 +54,9 @@ function obj = GainMod(obj,Pop,Gain,normalizeFlag)
 
     if normalizeFlag
 
-        W = BalanceNormalize(W); % Rebalances the weights after scaling
+        W = BalanceNormalize(W); % Rebalances the weights after scaling and normalized to fixed radius
     else
-        W = BalanceNormalize(W,'Normalize',false); % Normalizes to fixes radius / global gain
+        W = BalanceNormalize(W,'Normalize',false); % Balance with no rescaling/normalization
     end
 
     obj.ConnMat = W; % Re-Initializes the connectivity matrix property after modulation

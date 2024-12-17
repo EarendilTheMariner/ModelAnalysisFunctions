@@ -5,6 +5,7 @@ classdef LineNetwork < handle
     properties
         Coordinates         % spatial coordinates of each neuron, length(coords) = network length, keeping neuron density fixed
         Rates               % time x n rate matrix
+        Voltage             % time x n input potential matrix
         ConnMat             % n x n connectivity matrix
         E                   % n x 1 logical index of excitatory units
         I                   % n x 1 logical index of inhibitory units
@@ -27,9 +28,13 @@ classdef LineNetwork < handle
             obj.Length = Length;
             obj.Size = Length;
             obj.Coordinates = linspace(0,Length,Length);
-            obj = Instantiate(obj); % Builds the network from basic parameters
             
-            
+            if length(PopParams)==5
+                obj = Instantiate(obj); % Builds the network from basic parameters
+            else
+                obj = Instantiate2(obj);
+            end
+
             obj.Projectome = SpatialCoupling(obj.ConnMat,obj.E,obj.I,obj.Coordinates,false); % Computes the spatial projectome of the network, 
      %       obj.Skewness = SkewnessFactor(obj.Projectome); 
             obj.Rates = [];      
@@ -41,7 +46,7 @@ classdef LineNetwork < handle
     
     methods (Access = public)
 
-        SimulateLine(obj,t_steps); % Simulates network, t_steps is duration of sim in milliseconds 
+        SimulateLine(obj,t_steps,varargin); % Simulates network, t_steps is duration of sim in milliseconds 
         GainMod(obj,Pop,Gain,normalizeFlag); % Scales synaptic weights of population of interest (Pop = 1 , ... , 5) by scaling facter Gain. 
     end
 

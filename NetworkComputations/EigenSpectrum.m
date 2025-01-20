@@ -14,7 +14,7 @@ function EigenSpectrum(W,varargin)
    
     axis equal
     box off
-    set(gcf, 'WindowState', 'maximized');
+%    set(gcf, 'WindowState', 'maximized');
     drawnow;  % Ensure the plot is fully rendered
 %    save2pdf(fig,['./'],['Spectrum'],'-dpdf');
         
